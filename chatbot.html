@@ -596,6 +596,40 @@ async function sendMessage() {
     input.disabled = false;
   }
 }
+
+// ── Iframe embedded mode ──────────────────────────────────────────────────────
+// When chatbot.html runs inside the widget iframe, auto-open and fill the frame.
+if (window.self !== window.top) {
+  // Hide the internal floating button — parent page handles open/close
+  toggleBtn.style.display = "none";
+
+  // Fill the entire iframe viewport
+  Object.assign(chatWindow.style, {
+    position: "fixed",
+    bottom: "0", right: "0",
+    width: "100%", height: "100%",
+    borderRadius: "0",
+    boxShadow: "none",
+    transform: "none",
+    opacity: "1",
+    pointerEvents: "auto"
+  });
+  chatWindow.classList.add("open");
+
+  // Always show the ✕ close button; it notifies the parent to hide the iframe
+  closeBtn.style.display = "flex";
+  closeBtn.onclick = () => window.parent.postMessage({ type: "digipro-close" }, "*");
+
+  // Show greeting after settings have a moment to load
+  setTimeout(() => {
+    if (!chatOpened) {
+      chatOpened = true;
+      appendBotMessage(GREETING);
+      history.push({ role: "assistant", content: GREETING });
+    }
+    input.focus();
+  }, 350);
+}
 </script>
 
 </body>
