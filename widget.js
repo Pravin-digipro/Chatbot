@@ -8,7 +8,7 @@
   iframe.style.bottom = "20px";
   iframe.style.right = "20px";
   iframe.style.width = "420px";
-  iframe.style.height = "700px";
+  iframe.style.height = "600px";
   iframe.style.border = "none";
   iframe.style.zIndex = "999999";
 
