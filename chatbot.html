@@ -2,20 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Digipro Assistant</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>DigiPro Growth Consultant</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
 <style>
-* { box-sizing: border-box; margin:0; padding:0; }
-
-body {
-  font-family: 'Inter', sans-serif;
-  background: #eef2f7;
+:root {
+  --c1: #6366f1;
+  --c2: #06b6d4;
 }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; }
 
-/* Floating Button */
+/* ── Toggle Button ── */
 #chat-toggle {
   position: fixed;
   bottom: 24px;
@@ -25,337 +23,577 @@ body {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  font-size: 24px;
+  font-size: 26px;
   color: white;
-  background: linear-gradient(135deg,#6366f1,#06b6d4);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  transition: 0.3s;
+  background: linear-gradient(135deg, var(--c1), var(--c2));
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-#chat-toggle:hover { transform: scale(1.08); }
+#chat-toggle:hover { transform: scale(1.08); box-shadow: 0 14px 36px rgba(0,0,0,0.3); }
 
-/* Chat Window */
+/* ── Chat Window (desktop) ── */
 #chat-window {
   position: fixed;
   bottom: 100px;
   right: 24px;
-  width: 380px;
-  height: min(600px, 80vh);
+  width: 390px;
+  height: min(620px, 82vh);
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.15);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.18);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(20px) scale(0.97);
   pointer-events: none;
-  transition: 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1000;
 }
 #chat-window.open {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
-/* Header */
+/* ── Mobile: full-screen ── */
+@media (max-width: 520px) {
+  #chat-window {
+    width: 100%;
+    height: 100%;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  #chat-window.open {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  #chat-toggle {
+    bottom: 16px;
+    right: 16px;
+    width: 54px;
+    height: 54px;
+    font-size: 22px;
+  }
+}
+
+/* ── Header ── */
 .chat-header {
-  padding: 18px;
-  background: linear-gradient(135deg,#6366f1,#06b6d4);
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--c1), var(--c2));
   color: white;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
+  flex-shrink: 0;
 }
-.chat-header img {
-  width: 38px;
-  height: 38px;
+.header-avatar {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.4);
+  flex-shrink: 0;
+  object-fit: cover;
 }
-.title { font-weight: 600; font-size: 15px; }
-.status { font-size: 12px; opacity: 0.9; }
+.header-info { flex: 1; min-width: 0; }
+.header-title { font-weight: 600; font-size: 14px; line-height: 1.3; }
+.header-status { font-size: 11px; opacity: 0.85; margin-top: 1px; }
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #4ade80;
+  border-radius: 50%;
+  margin-right: 4px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 
-/* Messages */
+.close-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.close-btn:hover { background: rgba(255,255,255,0.25); }
+
+@media (max-width: 520px) {
+  .close-btn { display: flex; }
+}
+
+/* ── Messages ── */
 #messages {
   flex: 1;
-  padding: 20px;
+  padding: 16px 14px;
   overflow-y: auto;
   background: #f8fafc;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-/* Message Wrapper */
 .message-wrapper {
   display: flex;
-  width: 100%;
   align-items: flex-end;
   gap: 8px;
 }
 .message-wrapper.user {
-  justify-content: flex-end;
-  padding-left: 40px;
+  flex-direction: row-reverse;
+  padding-left: 36px;
 }
 .message-wrapper.bot {
-  padding-right: 40px;
+  padding-right: 36px;
 }
 
-/* Avatar */
-.avatar {
-  width: 32px;
-  height: 32px;
+.msg-avatar {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
 }
 
-/* Bubble */
-.message {
-  max-width: 100%;
-  padding: 12px 16px;
+.bubble-wrap { display: flex; flex-direction: column; max-width: 100%; }
+.message-wrapper.user .bubble-wrap { align-items: flex-end; }
+
+.bubble {
+  padding: 10px 14px;
   border-radius: 16px;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
-  white-space: pre-wrap;
   word-break: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
 }
-.message-wrapper.bot .message {
+.message-wrapper.bot .bubble {
   background: #e2e8f0;
-  border-bottom-left-radius: 6px;
+  border-bottom-left-radius: 4px;
+  color: #1e293b;
 }
-.message-wrapper.user .message {
-  background: linear-gradient(135deg,#6366f1,#4f46e5);
+.message-wrapper.user .bubble {
+  background: linear-gradient(135deg, var(--c1), var(--c2));
   color: white;
-  border-bottom-right-radius: 6px;
+  border-bottom-right-radius: 4px;
 }
 
-/* Timestamp */
 .timestamp {
-  font-size: 11px;
-  margin-top: 6px;
-  opacity: 0.6;
-  text-align: right;
+  font-size: 10px;
+  margin-top: 4px;
+  color: #94a3b8;
+}
+.message-wrapper.user .timestamp { text-align: right; }
+
+/* ── Typing dots ── */
+.typing-dots { display: flex; gap: 4px; padding: 4px 2px; }
+.typing-dots span {
+  width: 7px;
+  height: 7px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: dot 1.4s infinite both;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot {
+  0%, 100% { opacity: 0.2; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
 }
 
-/* Input */
+/* Streaming cursor */
+.streaming::after {
+  content: "▋";
+  font-size: 12px;
+  animation: blink-cursor 0.8s infinite;
+  margin-left: 1px;
+  color: #6366f1;
+}
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Lead captured banner ── */
+#lead-banner {
+  display: none;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border-top: 1px solid #6ee7b7;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #065f46;
+  text-align: center;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+#lead-banner.show { display: block; }
+
+/* ── Input area ── */
 #input-area {
   display: flex;
-  padding: 14px;
+  align-items: flex-end;
+  padding: 10px 12px;
   background: #fff;
   border-top: 1px solid #e5e7eb;
+  gap: 8px;
+  flex-shrink: 0;
 }
 #message-input {
   flex: 1;
-  border: none;
-  padding: 12px;
+  border: 1.5px solid #e2e8f0;
+  padding: 10px 13px;
   border-radius: 12px;
-  background: #f1f5f9;
+  background: #f8fafc;
   font-size: 14px;
   outline: none;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+  min-height: 42px;
+  max-height: 110px;
+  overflow-y: auto;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
 }
+#message-input:focus { border-color: #6366f1; background: #fff; }
+#message-input::placeholder { color: #94a3b8; }
+
 #send-btn {
-  margin-left: 8px;
   border: none;
-  padding: 0 18px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
-  background: linear-gradient(135deg,#6366f1,#06b6d4);
+  background: linear-gradient(135deg, var(--c1), var(--c2));
   color: white;
   cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s, transform 0.15s;
 }
+#send-btn:hover { transform: scale(1.05); }
+#send-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
 
-/* Typing dots */
-.typing span {
-  width: 6px;
-  height: 6px;
-  background: #94a3b8;
-  border-radius: 50%;
-  display: inline-block;
-  animation: blink 1.4s infinite both;
-}
-.typing span:nth-child(2){ animation-delay: .2s; }
-.typing span:nth-child(3){ animation-delay: .4s; }
-@keyframes blink {
-  0% { opacity: .2; }
-  20% { opacity: 1; }
-  100% { opacity: .2; }
-}
-
-/* Cursor animation */
-.message.typing::after {
-  content: "|";
-  animation: blinkCursor 1s infinite;
-  margin-left: 2px;
-}
-@keyframes blinkCursor {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0; }
+/* ── Mobile input tweaks ── */
+@media (max-width: 520px) {
+  #message-input { font-size: 16px; } /* prevents iOS zoom */
+  #input-area { padding: 10px 10px 20px; } /* safe area bottom */
 }
 </style>
 </head>
 <body>
 
-<button id="chat-toggle">💬</button>
+<button id="chat-toggle" aria-label="Open chat">💬</button>
 
-<div id="chat-window">
+<div id="chat-window" role="dialog" aria-label="DigiPro Growth Consultant">
   <div class="chat-header">
-    <img src="https://static.wixstatic.com/media/34385c_824d9838d8754e5992987ad9bcf17d76~mv2.jpg">
-    <div>
-      <div class="title">Digipro Assistant</div>
-      <div class="status">Online</div>
+    <img class="header-avatar"
+      src="https://static.wixstatic.com/media/34385c_824d9838d8754e5992987ad9bcf17d76~mv2.jpg"
+      alt="DigiPro">
+    <div class="header-info">
+      <div class="header-title">DigiPro Growth Consultant</div>
+      <div class="header-status">
+        <span class="status-dot"></span>Online — here to help
+      </div>
     </div>
+    <button class="close-btn" id="close-btn" aria-label="Close chat">✕</button>
   </div>
 
   <div id="messages"></div>
 
+  <div id="lead-banner">✅ Details noted — our team will reach out soon!</div>
+
   <div id="input-area">
-    <input type="text" id="message-input" placeholder="Type your message..." />
-    <button id="send-btn">Send</button>
+    <textarea
+      id="message-input"
+      placeholder="Type your message…"
+      rows="1"
+      aria-label="Message input"
+    ></textarea>
+    <button id="send-btn" aria-label="Send message">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
   </div>
 </div>
 
 <script>
-const toggleBtn = document.getElementById("chat-toggle");
-const chatWindow = document.getElementById("chat-window");
+const toggleBtn   = document.getElementById("chat-toggle");
+const closeBtn    = document.getElementById("close-btn");
+const chatWindow  = document.getElementById("chat-window");
 const messagesDiv = document.getElementById("messages");
-const input = document.getElementById("message-input");
-const sendBtn = document.getElementById("send-btn");
+const input       = document.getElementById("message-input");
+const sendBtn     = document.getElementById("send-btn");
+const leadBanner  = document.getElementById("lead-banner");
 
-toggleBtn.onclick = () => chatWindow.classList.toggle("open");
-sendBtn.onclick = sendMessage;
-input.addEventListener("keypress", e => {
-  if (e.key === "Enter") sendMessage();
-});
+let BOT_AVATAR  = "https://res.cloudinary.com/dbqjuze5g/image/upload/v1771938306/user_xojavv.png";
+let USER_AVATAR = "https://static.wixstatic.com/media/34385c_824d9838d8754e5992987ad9bcf17d76~mv2.jpg";
+let GREETING    = "Hi! 👋 I'm DigiPro's consultant assistant.\n\nWhat can I help you with today?";
 
-function getTime() {
-  const now = new Date();
-  return now.getHours() + ":" + String(now.getMinutes()).padStart(2, "0");
-}
+// Load settings from server and apply dynamically
+(async () => {
+  try {
+    const res = await fetch('/settings');
+    const s   = await res.json();
+    if (s.primaryColor1) document.documentElement.style.setProperty('--c1', s.primaryColor1);
+    if (s.primaryColor2) document.documentElement.style.setProperty('--c2', s.primaryColor2);
+    if (s.botName)       document.querySelector('.header-title').textContent = s.botName;
+    if (s.headerAvatarUrl) {
+      document.querySelector('.header-avatar').src = s.headerAvatarUrl;
+      USER_AVATAR = s.headerAvatarUrl;
+    }
+    if (s.botAvatarUrl)  BOT_AVATAR = s.botAvatarUrl;
+    if (s.greeting)      GREETING   = s.greeting;
+  } catch {}
+})();
 
-function addMessage(text, type) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "message-wrapper " + type;
+let history      = [];
+let leadSaved    = false;
+let isWaiting    = false;
+let chatOpened   = false;
 
-  const avatar = document.createElement("img");
-  avatar.className = "avatar";
-  avatar.src = type === "bot"
-    ? "https://res.cloudinary.com/dbqjuze5g/image/upload/v1771938306/user_xojavv.png"
-    : "https://static.wixstatic.com/media/34385c_824d9838d8754e5992987ad9bcf17d76~mv2.jpg";
+// ── Toggle ──
+toggleBtn.onclick = () => {
+  const isOpen = chatWindow.classList.toggle("open");
+  toggleBtn.textContent = isOpen ? "✕" : "💬";
+  toggleBtn.style.fontSize = isOpen ? "18px" : "26px";
 
-  const bubbleContainer = document.createElement("div");
-  const bubble = document.createElement("div");
-  bubble.className = "message";
-  bubble.innerText = text;
-
-  const time = document.createElement("div");
-  time.className = "timestamp";
-  time.innerText = getTime();
-
-  bubbleContainer.appendChild(bubble);
-  bubbleContainer.appendChild(time);
-
-  if (type === "bot") {
-    wrapper.appendChild(avatar);
-    wrapper.appendChild(bubbleContainer);
-  } else {
-    wrapper.appendChild(bubbleContainer);
-    wrapper.appendChild(avatar);
+  if (isOpen && !chatOpened) {
+    chatOpened = true;
+    appendBotMessage(GREETING);
+    history.push({ role: "assistant", content: GREETING });
   }
 
+  if (isOpen) setTimeout(() => input.focus(), 300);
+};
+
+closeBtn.onclick = () => {
+  chatWindow.classList.remove("open");
+  toggleBtn.textContent = "💬";
+  toggleBtn.style.fontSize = "26px";
+};
+
+// ── Message builders ──
+function getTime() {
+  const d = new Date();
+  return d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+
+function appendBotMessage(text) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "message-wrapper bot";
+
+  const avatar = document.createElement("img");
+  avatar.className = "msg-avatar";
+  avatar.src = BOT_AVATAR;
+  avatar.alt = "Bot";
+
+  const wrap = document.createElement("div");
+  wrap.className = "bubble-wrap";
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+
+  const ts = document.createElement("div");
+  ts.className = "timestamp";
+  ts.textContent = getTime();
+
+  wrap.appendChild(bubble);
+  wrap.appendChild(ts);
+  wrapper.appendChild(avatar);
+  wrapper.appendChild(wrap);
   messagesDiv.appendChild(wrapper);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  scrollBottom();
+}
+
+function appendUserMessage(text) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "message-wrapper user";
+
+  const avatar = document.createElement("img");
+  avatar.className = "msg-avatar";
+  avatar.src = USER_AVATAR;
+  avatar.alt = "You";
+
+  const wrap = document.createElement("div");
+  wrap.className = "bubble-wrap";
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+
+  const ts = document.createElement("div");
+  ts.className = "timestamp";
+  ts.textContent = getTime();
+
+  wrap.appendChild(bubble);
+  wrap.appendChild(ts);
+  wrapper.appendChild(wrap);
+  wrapper.appendChild(avatar);
+  messagesDiv.appendChild(wrapper);
+  scrollBottom();
 }
 
 function showTyping() {
   const wrapper = document.createElement("div");
   wrapper.className = "message-wrapper bot";
-  wrapper.id = "typing";
+  wrapper.id = "typing-indicator";
 
   const avatar = document.createElement("img");
-  avatar.className = "avatar";
-  avatar.src = "https://res.cloudinary.com/dbqjuze5g/image/upload/v1771938306/user_xojavv.png";
+  avatar.className = "msg-avatar";
+  avatar.src = BOT_AVATAR;
+  avatar.alt = "Bot";
 
   const bubble = document.createElement("div");
-  bubble.className = "message";
-  bubble.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+  bubble.className = "bubble";
+  bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
 
   wrapper.appendChild(avatar);
   wrapper.appendChild(bubble);
   messagesDiv.appendChild(wrapper);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  scrollBottom();
 }
 
 function removeTyping() {
-  const typing = document.getElementById("typing");
-  if (typing) typing.remove();
+  document.getElementById("typing-indicator")?.remove();
 }
 
-function cleanText(text) {
-  return text
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/,/g, ", ");
-}
-
-function streamReply(text) {
-  const cleaned = cleanText(text);
-
+function streamBotMessage(text, onDone) {
   const wrapper = document.createElement("div");
   wrapper.className = "message-wrapper bot";
 
   const avatar = document.createElement("img");
-  avatar.className = "avatar";
-  avatar.src = "https://res.cloudinary.com/dbqjuze5g/image/upload/v1771938306/user_xojavv.png";
+  avatar.className = "msg-avatar";
+  avatar.src = BOT_AVATAR;
+  avatar.alt = "Bot";
 
-  const bubbleContainer = document.createElement("div");
+  const wrap = document.createElement("div");
+  wrap.className = "bubble-wrap";
+
   const bubble = document.createElement("div");
-  bubble.className = "message typing";
-  bubble.innerText = "";
+  bubble.className = "bubble streaming";
+  bubble.textContent = "";
 
-  const time = document.createElement("div");
-  time.className = "timestamp";
-  time.innerText = getTime();
+  const ts = document.createElement("div");
+  ts.className = "timestamp";
+  ts.textContent = getTime();
 
-  bubbleContainer.appendChild(bubble);
-  bubbleContainer.appendChild(time);
+  wrap.appendChild(bubble);
+  wrap.appendChild(ts);
   wrapper.appendChild(avatar);
-  wrapper.appendChild(bubbleContainer);
+  wrapper.appendChild(wrap);
   messagesDiv.appendChild(wrapper);
 
-  let index = 0;
-  const typingSpeed = 20;
-
+  let i = 0;
   const interval = setInterval(() => {
-    if (index < cleaned.length) {
-      bubble.innerText += cleaned.charAt(index);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      index++;
+    if (i < text.length) {
+      bubble.textContent += text[i++];
+      scrollBottom();
     } else {
-      bubble.classList.remove("typing");
+      bubble.classList.remove("streaming");
       clearInterval(interval);
+      if (onDone) onDone();
     }
-  }, typingSpeed);
+  }, 16);
 }
 
-async function sendMessage() {
-  const message = input.value.trim();
-  if (!message) return;
+function scrollBottom() {
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
 
-  addMessage(message, "user");
+// ── Auto-resize textarea ──
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 110) + "px";
+});
+
+// ── Send ──
+sendBtn.onclick = sendMessage;
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text || isWaiting) return;
+
+  isWaiting = true;
+  sendBtn.disabled = true;
+  input.disabled = true;
+
+  appendUserMessage(text);
   input.value = "";
+  input.style.height = "auto";
   showTyping();
+
+  // Snapshot history before this turn
+  const currentHistory = [...history];
 
   try {
     const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({
+        message: text,
+        history: currentHistory,
+        leadAlreadySaved: leadSaved
+      })
     });
 
     const data = await res.json();
     removeTyping();
-    streamReply(data.reply);
 
-  } catch (err) {
+    const reply = data.reply || "Sorry, something went wrong.";
+
+    // Update history with this exchange
+    history.push({ role: "user", content: text });
+    history.push({ role: "assistant", content: reply });
+
+    streamBotMessage(reply, () => {
+      isWaiting = false;
+      sendBtn.disabled = false;
+      input.disabled = false;
+      input.focus();
+
+      if (data.leadCaptured && !leadSaved) {
+        leadSaved = true;
+        leadBanner.classList.add("show");
+      }
+    });
+
+  } catch {
     removeTyping();
-    addMessage("Server error. Check backend.", "bot");
+    appendBotMessage("Connection error. Please try again.");
+    isWaiting = false;
+    sendBtn.disabled = false;
+    input.disabled = false;
   }
 }
 </script>
