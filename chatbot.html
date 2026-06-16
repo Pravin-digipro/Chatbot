@@ -233,6 +233,32 @@ body { font-family: 'Inter', sans-serif; }
   50% { opacity: 0; }
 }
 
+/* ── Embedded / iframe mode ── */
+html.embedded, body.embedded {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+body.embedded #chat-toggle { display: none !important; }
+body.embedded .close-btn   { display: flex !important; }
+body.embedded #chat-window {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: none !important;
+}
+
 /* ── Lead captured banner ── */
 #lead-banner {
   display: none;
@@ -598,41 +624,16 @@ async function sendMessage() {
 }
 
 // ── Iframe embedded mode ──────────────────────────────────────────────────────
-// position:fixed inside an iframe clips the header. Use static layout instead.
 if (window.self !== window.top) {
-  // Hide the internal floating button — parent page owns open/close
-  toggleBtn.style.display = "none";
-
-  // Make <body> a full-height flex column with no scroll
-  Object.assign(document.body.style, {
-    height: "100vh",
-    overflow: "hidden",
-    margin: "0",
-    padding: "0",
-    display: "flex",
-    flexDirection: "column"
-  });
-
-  // Take chatWindow out of fixed positioning so it fills the body naturally
-  Object.assign(chatWindow.style, {
-    position: "static",
-    width: "100%",
-    height: "100%",
-    flex: "1",
-    borderRadius: "0",
-    boxShadow: "none",
-    transform: "none",
-    opacity: "1",
-    pointerEvents: "auto",
-    minHeight: "0"
-  });
+  // CSS class does all the layout work (see .embedded rules in <style>)
+  document.documentElement.classList.add("embedded");
+  document.body.classList.add("embedded");
   chatWindow.classList.add("open");
 
-  // ✕ header button closes the parent iframe
-  closeBtn.style.display = "flex";
+  // ✕ header button closes the parent iframe via postMessage
   closeBtn.onclick = () => window.parent.postMessage({ type: "digipro-close" }, "*");
 
-  // Show greeting after settings load
+  // Show greeting after settings have loaded
   setTimeout(() => {
     if (!chatOpened) {
       chatOpened = true;
