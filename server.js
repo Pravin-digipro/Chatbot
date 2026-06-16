@@ -97,13 +97,20 @@ RULES:
 - If pricing is asked, say the team will share a tailored quote
 - Ask for email AFTER helping — never before
 
-OUTPUT — always valid JSON, nothing else:
+JSON OUTPUT RULES — critical, always follow:
+- Output ONLY valid JSON. No text before or after.
+- "reply": your conversational response to the visitor
+- "lead.name": the visitor's name if they have mentioned it, otherwise null
+- "lead.email": CRITICAL — if the visitor's current message contains an email address (any word with @ and a dot), copy it exactly here. Never leave this null if an email appears in the message.
+- "lead.interest": a one-line summary of what they need, or null
+
+Example output:
 {
-  "reply": "your response here",
+  "reply": "Perfect! Pravin will reach out to you at ravi@example.com soon. Is there anything else I can help you with?",
   "lead": {
-    "name": "extracted name or null",
-    "email": "extracted email or null",
-    "interest": "one-line summary of their need or null"
+    "name": "Ravi",
+    "email": "ravi@example.com",
+    "interest": "website development"
   }
 }`;
 
@@ -143,6 +150,15 @@ app.post("/chat", async (req, res) => {
     catch { parsed = { reply: "I'm having a moment — could you rephrase that?", lead: {} }; }
 
     const { reply, lead = {} } = parsed;
+
+    // Fallback: if LLM missed the email, extract it directly from the user's message
+    if (!lead.email || lead.email === "null" || lead.email === "undefined") {
+      const emailMatch = message.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+      if (emailMatch) lead.email = emailMatch[0];
+    }
+    if (!lead.name || lead.name === "null") lead.name = null;
+
+    console.log(`[chat] user: "${message}" | LLM lead: ${JSON.stringify(lead)}`);
 
     let leadCaptured = false;
     const isValidEmail = lead.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email);
