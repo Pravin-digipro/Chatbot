@@ -598,29 +598,41 @@ async function sendMessage() {
 }
 
 // ── Iframe embedded mode ──────────────────────────────────────────────────────
-// When chatbot.html runs inside the widget iframe, auto-open and fill the frame.
+// position:fixed inside an iframe clips the header. Use static layout instead.
 if (window.self !== window.top) {
-  // Hide the internal floating button — parent page handles open/close
+  // Hide the internal floating button — parent page owns open/close
   toggleBtn.style.display = "none";
 
-  // Fill the entire iframe viewport
+  // Make <body> a full-height flex column with no scroll
+  Object.assign(document.body.style, {
+    height: "100vh",
+    overflow: "hidden",
+    margin: "0",
+    padding: "0",
+    display: "flex",
+    flexDirection: "column"
+  });
+
+  // Take chatWindow out of fixed positioning so it fills the body naturally
   Object.assign(chatWindow.style, {
-    position: "fixed",
-    bottom: "0", right: "0",
-    width: "100%", height: "100%",
+    position: "static",
+    width: "100%",
+    height: "100%",
+    flex: "1",
     borderRadius: "0",
     boxShadow: "none",
     transform: "none",
     opacity: "1",
-    pointerEvents: "auto"
+    pointerEvents: "auto",
+    minHeight: "0"
   });
   chatWindow.classList.add("open");
 
-  // Always show the ✕ close button; it notifies the parent to hide the iframe
+  // ✕ header button closes the parent iframe
   closeBtn.style.display = "flex";
   closeBtn.onclick = () => window.parent.postMessage({ type: "digipro-close" }, "*");
 
-  // Show greeting after settings have a moment to load
+  // Show greeting after settings load
   setTimeout(() => {
     if (!chatOpened) {
       chatOpened = true;
