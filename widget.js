@@ -51,7 +51,7 @@
       bottom: "0",   right: "0",
       borderRadius: "0", boxShadow: "none"
     } : {
-      width: "420px", height: "600px",
+      width: "420px", height: "500px",
       bottom: "100px", right: "24px",
       borderRadius: "20px",
       boxShadow: "0 30px 80px rgba(0,0,0,0.2)"
